@@ -1,0 +1,142 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "AI Stock Prediction API", "version": "v3" },
+  "servers": [
+    { "url": "https://ai-stock-api.onrender.com" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "X-API-Key" }
+    },
+    "schemas": {
+      "PredictRequest": {
+        "type": "object",
+        "properties": {
+          "ticker": { "type": "string" },
+          "tickers": {
+            "oneOf": [
+              { "type": "array", "items": { "type": "string" } },
+              { "type": "string" }
+            ]
+          },
+          "horizon_days": { "type": "integer", "enum": [2, 3], "default": 3 },
+          "quality": { "type": "string", "enum": ["fast", "accurate"], "default": "accurate" },
+          "equity": { "type": "number", "default": 100000 },
+          "min_prob_to_trade": { "type": "number" },
+          "max_risk_per_trade": { "type": "number" },
+          "stop_atr_mult": { "type": "number" },
+          "skip_earnings_window": { "type": "integer" },
+          "skip_event_window": { "type": "integer" }
+        }
+      },
+      "PredictionItem": {
+        "type": "object",
+        "properties": {
+          "ticker": { "type": "string" },
+          "decision": { "type": "string" },
+          "prob_up": { "type": "number" },
+          "exp_return": { "type": "number", "description": "fraction; 0.021 = +2.1%" },
+          "ret_low": { "type": "number" },
+          "ret_high": { "type": "number" },
+          "auc": { "type": "number" },
+          "horizon_days": { "type": "integer" },
+          "reason": { "type": "string" },
+          "size_pct": { "type": ["number", "null"] },
+          "stop_pct": { "type": ["number", "null"] }
+        }
+      },
+      "PredictResponse": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "horizon_days": { "type": "integer" },
+          "quality": { "type": "string" },
+          "predictions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PredictionItem" }
+          },
+          "prediction": { "$ref": "#/components/schemas/PredictionItem" },
+          "ticker": { "type": ["string", "null"] },
+          "decision": { "type": ["string", "null"] },
+          "prob_up": { "type": ["number", "null"] },
+          "exp_return": { "type": ["number", "null"] },
+          "ret_low": { "type": ["number", "null"] },
+          "ret_high": { "type": ["number", "null"] },
+          "auc": { "type": ["number", "null"] },
+          "reason": { "type": ["string", "null"] },
+          "table_markdown": { "type": ["string", "null"] },
+          "table_csv": { "type": ["string", "null"] },
+          "timestamp": { "type": "string" }
+        }
+      },
+      "WarmRequest": {
+        "type": "object",
+        "properties": {
+          "tickers": {
+            "oneOf": [
+              { "type": "array", "items": { "type": "string" } },
+              { "type": "string" }
+            ]
+          },
+          "horizon_days": { "type": "integer", "enum": [2, 3], "default": 3 },
+          "quality": { "type": "string", "enum": ["fast", "accurate"], "default": "accurate" }
+        }
+      },
+      "WarmResponse": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "warmed": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "ticker": { "type": "string" }, "auc": { "type": "number" } }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/predict": {
+      "post": {
+        "operationId": "predict",
+        "security": [{ "ApiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/PredictRequest" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Prediction response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/PredictResponse" } }
+            }
+          }
+        }
+      }
+    },
+    "/warm": {
+      "post": {
+        "operationId": "warm",
+        "security": [{ "ApiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/WarmRequest" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Warm response",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/WarmResponse" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}
